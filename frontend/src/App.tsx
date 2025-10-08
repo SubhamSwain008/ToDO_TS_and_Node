@@ -4,25 +4,21 @@ import axios from "axios";
 import type { Todo } from "./components/model";
 import Listing from "./components/list";
 
-// ❌ Remove dotenv — it won't work in the browser
-// import dotenv from 'dotenv'
-// dotenv.config();
-
-// ✅ Use environment variable properly:
-const BACKEND_URL = import.meta.env.VITE_BACKEND_URL ;
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
 
 const App: React.FC = () => {
   const [input, setInput] = useState<string>("");
   const [tasks, setTasks] = useState<Todo[]>([]);
   const [comTask, setComtask] = useState<Todo[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
+  const [isMobile, setIsMobile] = useState<boolean>(window.innerWidth <= 768);
 
   // ✅ Fetch incomplete tasks
   async function getTasks() {
     try {
       const Tasklist = await axios.get(`${BACKEND_URL}/getlist`);
       const incompleteTask: Todo[] = Tasklist.data.filter(
-        (task: Todo) => task.isDone === false
+        (task: Todo) => !task.isDone
       );
       setTasks(incompleteTask);
       setLoading(false);
@@ -36,7 +32,7 @@ const App: React.FC = () => {
     try {
       const Tasklist = await axios.get(`${BACKEND_URL}/getlist`);
       const completeTask: Todo[] = Tasklist.data.filter(
-        (task: Todo) => task.isDone === true
+        (task: Todo) => task.isDone
       );
       setComtask(completeTask);
     } catch (e) {
@@ -47,33 +43,38 @@ const App: React.FC = () => {
   useEffect(() => {
     getTasks();
     setTask();
-  }, []); // Run once on mount
+
+    // ✅ Handle screen resize for responsiveness
+    const handleResize = () => setIsMobile(window.innerWidth <= 768);
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
 
   // ✅ Add new task
   const heandel = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (input) {
-      const now = new Date();
-      const dateOnly = now.toISOString().split("T")[0];
+    if (!input) return;
 
-      const newTask: Todo = {
-        id: Date.now(),
-        task: input,
-        isDone: false,
-        date: dateOnly,
-      };
+    const now = new Date();
+    const dateOnly = now.toISOString().split("T")[0];
 
-      await axios.put(`${BACKEND_URL}/data`, newTask);
-      setTasks([...tasks, newTask]);
-      setInput("");
-    }
+    const newTask: Todo = {
+      id: Date.now(),
+      task: input,
+      isDone: false,
+      date: dateOnly,
+    };
+
+    await axios.put(`${BACKEND_URL}/data`, newTask);
+    setTasks([...tasks, newTask]);
+    setInput("");
   };
 
-  // 🌿 Inline styles (consistent with Input component)
+  // 🌿 Inline styles with responsive adjustments
   const appContainer: React.CSSProperties = {
     backgroundColor: "#f6fff6",
     minHeight: "100vh",
-    padding: "40px 20px",
+    padding: isMobile ? "20px 10px" : "40px 20px",
     fontFamily: "Arial, sans-serif",
     color: "#114411",
   };
@@ -82,7 +83,7 @@ const App: React.FC = () => {
     backgroundColor: "white",
     borderRadius: "16px",
     boxShadow: "0 3px 6px rgba(0,0,0,0.1)",
-    padding: "30px",
+    padding: isMobile ? "20px" : "30px",
     maxWidth: "700px",
     margin: "0 auto",
     border: "2px solid #22aa22",
@@ -90,7 +91,7 @@ const App: React.FC = () => {
 
   const heading: React.CSSProperties = {
     textAlign: "center",
-    fontSize: "2rem",
+    fontSize: isMobile ? "1.5rem" : "2rem",
     fontWeight: "bold",
     color: "#118811",
     marginBottom: "20px",
@@ -99,7 +100,10 @@ const App: React.FC = () => {
 
   const inputWrapper: React.CSSProperties = {
     display: "flex",
+    flexDirection: isMobile ? "column" : "row",
     justifyContent: "center",
+    alignItems: "center",
+    gap: "10px",
     marginBottom: "25px",
   };
 

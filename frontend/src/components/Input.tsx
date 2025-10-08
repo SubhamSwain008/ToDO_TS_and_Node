@@ -1,4 +1,4 @@
-import React, { useRef } from "react";
+import React, { useRef, useState, useEffect } from "react";
 
 interface Props {
   todo: string;
@@ -8,27 +8,43 @@ interface Props {
 
 const Input = ({ todo, setTodo, heandel }: Props) => {
   const inputRef = useRef<HTMLInputElement>(null);
+  const [isMobile, setIsMobile] = useState<boolean>(window.innerWidth <= 768);
 
-  const formStyle: React.CSSProperties = {
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth <= 768);
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
+  const containerStyle: React.CSSProperties = {
     display: "flex",
     justifyContent: "center",
     alignItems: "center",
-    margin: "20px 0",
-    gap: "10px",
+    flexDirection: "column",
+    width: "100%",
+  };
+
+  const formStyle: React.CSSProperties = {
+    display: "flex",
+    flexDirection: isMobile ? "column" : "row",
+    justifyContent: "center",
+    alignItems: "center",
+    gap: isMobile ? "10px" : "15px",
+    width: "100%",
   };
 
   const inputStyle: React.CSSProperties = {
-    padding: "10px 14px",
+    padding: isMobile ? "10px" : "12px 16px",
     borderRadius: "8px",
     border: "1px solid #ccc",
     outline: "none",
-    fontSize: "16px",
-    width: "250px",
+    fontSize: isMobile ? "14px" : "16px",
+    width: isMobile ? "90%" : "250px",
     transition: "border-color 0.3s ease",
   };
 
   const buttonStyle: React.CSSProperties = {
-    padding: "10px 18px",
+    padding: isMobile ? "10px" : "10px 18px",
     border: "none",
     borderRadius: "8px",
     backgroundColor: "#007bff",
@@ -36,13 +52,8 @@ const Input = ({ todo, setTodo, heandel }: Props) => {
     fontWeight: "bold",
     cursor: "pointer",
     transition: "background-color 0.3s ease",
-  };
-
-  const containerStyle: React.CSSProperties = {
-    display: "flex",
-    justifyContent: "center",
-    alignItems: "center",
-    flexDirection: "column",
+    width: isMobile ? "90%" : "auto",
+    textAlign: "center",
   };
 
   return (

@@ -1,9 +1,9 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import type { Todo } from "./model";
 import axios from "axios";
 
 // ✅ Backend URL from environment variable
-const BACKEND_URL = import.meta.env.VITE_BACKEND_URL ;
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
 
 interface Props {
   arr: Todo[];
@@ -13,14 +13,14 @@ interface Props {
 }
 
 const Listing = ({ arr, comarr, arrTask, setComarr }: Props) => {
+  const [isMobile, setIsMobile] = useState<boolean>(window.innerWidth <= 768);
+
   // ✅ Mark task as done
   const handleMarkDone = async (task: Todo) => {
     try {
       setComarr(prev => [...prev, { ...task, isDone: true }]);
       arrTask(prev => prev.filter(ele => ele.id !== task.id));
-
-      const res = await axios.put(`${BACKEND_URL}/markdone`, { id: task.id });
-      console.log("Marked done:", res.data);
+      await axios.put(`${BACKEND_URL}/markdone`, { id: task.id });
     } catch (e) {
       console.error("Error marking done:", e);
     }
@@ -29,11 +29,7 @@ const Listing = ({ arr, comarr, arrTask, setComarr }: Props) => {
   // ✅ Delete task
   const handleDelete = async (task: Todo, completed = false) => {
     try {
-      const res = await axios.delete(`${BACKEND_URL}/delete`, {
-        data: { id: task.id },
-      });
-      console.log("Deleted:", res.data);
-
+      await axios.delete(`${BACKEND_URL}/delete`, { data: { id: task.id } });
       if (completed) {
         setComarr(prev => prev.filter(ele => ele.id !== task.id));
       } else {
@@ -44,12 +40,19 @@ const Listing = ({ arr, comarr, arrTask, setComarr }: Props) => {
     }
   };
 
-  // 🌿 Common styles (matches App.tsx theme)
+  // ✅ Handle responsiveness
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth <= 768);
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
+  // 🌿 Common styles
   const containerStyle: React.CSSProperties = {
     backgroundColor: "#f6fff6",
-    padding: "25px 20px",
+    padding: isMobile ? "20px 10px" : "25px 20px",
     borderRadius: "12px",
-    width: "85%",
+    width: isMobile ? "95%" : "85%",
     margin: "30px auto",
     fontFamily: "Arial, sans-serif",
   };
@@ -58,7 +61,7 @@ const Listing = ({ arr, comarr, arrTask, setComarr }: Props) => {
     color: "#116611",
     fontWeight: "bold",
     marginBottom: "15px",
-    fontSize: "20px",
+    fontSize: isMobile ? "18px" : "20px",
     borderBottom: "2px solid #22aa22",
     paddingBottom: "5px",
   };
@@ -70,15 +73,17 @@ const Listing = ({ arr, comarr, arrTask, setComarr }: Props) => {
 
   const taskCard: React.CSSProperties = {
     display: "flex",
+    flexDirection: isMobile ? "column" : "row",
     justifyContent: "space-between",
-    alignItems: "center",
+    alignItems: isMobile ? "flex-start" : "center",
     backgroundColor: "white",
     border: "2px solid #22aa22",
     padding: "12px 18px",
     borderRadius: "10px",
     boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
-    gap: "15px",
+    gap: "10px",
     transition: "transform 0.1s ease-in-out",
+    wordBreak: "break-word",
   };
 
   const completedCard: React.CSSProperties = {
@@ -98,8 +103,8 @@ const Listing = ({ arr, comarr, arrTask, setComarr }: Props) => {
   const dateText: React.CSSProperties = {
     flex: 1,
     color: "#444",
-    fontSize: "0.9rem",
-    textAlign: "right",
+    fontSize: isMobile ? "0.8rem" : "0.9rem",
+    textAlign: isMobile ? "left" : "right",
     whiteSpace: "nowrap",
   };
 
@@ -107,6 +112,7 @@ const Listing = ({ arr, comarr, arrTask, setComarr }: Props) => {
     flexShrink: 0,
     display: "flex",
     gap: "10px",
+    marginTop: isMobile ? "8px" : "0px",
   };
 
   const buttonStyle: React.CSSProperties = {
@@ -114,7 +120,7 @@ const Listing = ({ arr, comarr, arrTask, setComarr }: Props) => {
     color: "white",
     border: "none",
     borderRadius: "6px",
-    padding: "6px 12px",
+    padding: isMobile ? "4px 8px" : "6px 12px",
     cursor: "pointer",
     fontWeight: "bold",
     transition: "background-color 0.2s ease-in-out",
